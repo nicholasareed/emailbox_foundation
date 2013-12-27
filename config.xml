@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.emailbox.foundation.app" version="0.0.9" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Email Foundation</name>
+    <description>
+        A basic email foundation
+    </description>
+    <author email="nick@getemailbox.com" href="http://cordova.io">
+        Nick Reed
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <preference name="phonegap-version" value="3.3.0" />
+    <preference name="orientation" value="portrait" />
+    <preference name="fullscreen" value="false" />
+    <preference name="webviewbounce" value="false" />
+
+    <feature name="Device">
+        <param name="android-package" value="org.apache.cordova.device.Device" />
+    </feature>
+
+    <feature name="InAppBrowser">
+        <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
+        <param name="ios-package" value="CDVInAppBrowser" />
+    </feature>
+
+    <icon src="icon.png" />
+    <icon src="icon_ios.png" gap:platform="ios" />
+
+
+    <gap:plugin name="org.apache.cordova.device" />
+    <gap:plugin name="org.apache.cordova.inappbrowser" />
+    <gap:splash src="splash.png" />
+
+</widget>

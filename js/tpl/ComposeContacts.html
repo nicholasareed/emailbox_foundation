@@ -1,0 +1,91 @@
+
+
+    {{#if only_single_address}}
+        <div class="single_address show_all_addresses">
+            <div class="clearfix">
+                <div class="three-quarters">
+                    <span class="full ellipsis label participant" data-email="{{only_single_address.[1]}}">
+                        <strong>To:</strong> {{only_single_address.[1]}}
+                    </span>
+                </div>
+                <div class="quarter text-right">
+                    <i class="icon ion-arrow-expand ion-arrow-left-b2"></i>
+                </div>
+            </div>
+        </div>
+    {{/if}}
+
+    <div class="addresses {{single_address_class}}">
+
+        <div class="clearfix choose_type">
+            <div class="two-thirds left">
+                <div class="recipient-switcher active" data-type="To">To <span>{{count Participants_To}}</span></div>
+                <div class="recipient-switcher" data-type="CC">CC <span>{{count Participants_CC}}</span></div>
+                <div class="recipient-switcher" data-type="BCC">BCC <span>0</span></div>
+            </div>
+            <div class="third text-right shrink">
+                &nbsp;<i class="icon ion-arrow-shrink"></i>&nbsp;
+            </div>
+        </div>
+
+        <div class="address_list active" data-type="To">
+            {{#each Participants_To}}
+
+                <div class="clearfix label participant" data-email="{{this.[1]}}">
+                    <div class="two-thirds ellipsis address_detail">
+                        {{this.[1]}}
+                    </div>
+                    <div class="third text-right remove_address">
+                        <i class="icon ion-close"></i>
+                    </div>
+                </div>
+
+            {{/each}}
+
+            <div class="add">
+                <div class="input-append">
+                    <input class="" id="appendedInputButton" type="text" placeholder="Start typing email or name">
+                    <button class="btn btn-success addEmail" type="button"><i class="icon ion-plus"></i></button>
+                    <button class="btn btn-success openButton" type="button"><i class="icon ion-person-stalker"></i></button>
+                    <!--
+                    <button class="btn btn-inverse closeButton" type="button"><i class="icon ion-close"></i></button>
+                    -->
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="address_list" data-type="CC">
+
+            {{#each Participants_CC}}
+
+                <span class="label participant" data-email="{{this.[1]}}">
+                    <span class="remove_address">X</span> <span class="address_detail">{{this.[1]}}</span>
+                </span>
+
+            {{/each}}
+
+            <div class="add">
+                <div class="input-append">
+                    <input class="" id="appendedInputButton" type="text" placeholder="Start typing email or name">
+                    <button class="btn btn-success addEmail" type="button"><i class="icon ion-plus"></i></button>
+                    <button class="btn btn-success openButton" type="button"><i class="icon ion-person-stalker"></i></button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="address_list" data-type="BCC">
+
+            <div class="add">
+                <div class="input-append">
+                    <input class="" id="appendedInputButton" type="text" placeholder="Start typing email or name">
+                    <button class="btn btn-success addEmail" type="button"><i class="icon ion-plus"></i></button>
+                    <button class="btn btn-success openButton" type="button"><i class="icon ion-person-stalker"></i></button>
+                </div>
+            </div>
+            
+        </div>
+
+    </div>

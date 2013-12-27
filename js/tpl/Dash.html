@@ -1,0 +1,47 @@
+<div class="topcoat-navigation-bar">
+    <div class="topcoat-navigation-bar__item left half back-button">
+        <span class="topcoat-icon-button--quiet" href="#">
+          <span class="topcoat-icon topcoat-icon--back"></span>
+        </span>
+    </div>
+    <div class="topcoat-navigation-bar__item half right">
+        <span class="quicklink nav-button-icon-text trigger-refresh">
+            <span class="icon ion-refresh"></span> <span>REFRESH</span>
+        </span>
+    </div>
+</div>
+<div class="topcoat-list__container scroller" style="top:3.0rem; background: #eee;">
+
+	<div class="dash-stats">
+
+		{{#each odometers}}
+
+			<div class="dash-stat">
+				<div class="clearfix">
+					<div class="half left">
+						<h3 class="ellipsis full">{{name}}</h3>
+					</div>
+					<div class="half odometer-holder left text-center">
+						<div id="{{id}}" class="odometer trigger-refresh" style="font-size:32px; margin-top: 20px;margin-bottom: 20px;">00</div>
+					</div>
+				</div>
+				<div class="with-fake-shadow"></div>
+			</div>
+
+		{{/each}}
+
+		<!--
+		<div class="full text-center">
+			<span class="sent_today">Emails Sent Today</span>
+			<br />
+			<br />
+			<div>
+				<div id="odometer" class="odometer trigger-refresh" style="font-size:120px;">00</div>
+			</div>
+		</div>
+		-->
+
+	</div>
+
+
+</div>

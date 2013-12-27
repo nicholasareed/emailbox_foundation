@@ -1,0 +1,103 @@
+    
+    <div class="simple-display">
+
+        <div class="clearfix">
+            <div class="three-quarters" style="color:#222;font-size:16px;">
+                {{senderName original.headers.From_Parsed}}&nbsp;
+            </div>
+            <div class="quarter text-right">
+                {{receivedDatetimeTiny common.date}}
+            </div>
+        </div>
+        <div class="" style="color: #777;padding-top:8px;">
+            {{{display_bodies this true}}}
+        </div>
+
+    </div>
+    <div class="full-display">
+
+        <div class="info clearfix">
+
+            <div class="two-thirds">
+                <!-- Sender, recipient, mailing list, etc. -->
+
+                <div class="date-received">
+                    {{receivedDatetime common.date}}
+                </div>
+
+                <div class="sender">
+                    {{senderName original.headers.From_Parsed}}&nbsp;
+                </div>
+
+                <div class="simple-recipients">
+                    <!-- Should test if I have multiple incoming accounts, and say which account it is for (don't show my default account) -->
+                    
+                    {{#each original.headers.To_Parsed}}
+                        <span class="recipient-name to-type">{{personName this}}</span>
+                    {{/each}}
+                    {{#if original.headers.Cc_Parsed}}
+                        {{#each original.headers.Cc_Parsed}}
+                            <span class="recipient-name cc-type">{{personName this}}</span>
+                        {{/each}}
+                    {{/if}}
+                    {{#if original.headers.Bcc_Parsed}}
+                        {{#each original.headers.Bcc_Parsed}}
+                            <span class="recipient-name bcc-type">{{personName this}}</span>
+                        {{/each}}
+                    {{/if}}
+
+                </div>
+
+                <div class="complex-recipients nodisplay">
+
+                    <div class="sender-email">
+                        <small>{{senderEmail original.headers.From_Parsed}}</small>
+                    </div>
+
+                    <div class="recipient-name">
+                        <small>To: {{#each original.headers.To_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
+                    </div>
+
+                    {{#if original.headers.Cc_Parsed}}
+                        <div class="recipient-name">
+                            <small>CC: {{#each original.headers.Cc_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
+                        </div>
+                    {{/if}}
+
+                    {{#if original.headers.Bcc_Parsed}}
+                        <div class="recipient-name">
+                            <small>CC: {{#each original.headers.Bcc_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
+                        </div>
+                    {{/if}}
+
+                </div>
+
+            </div>
+
+            <div class="third">
+
+                <div class="text-right action-buttons">
+                    <span class="icon action-star ion-ios7-star{{#ifCondIn "\\Starred" original.labels}}{{else}}-outline{{/ifCondIn}}"></span>
+                    <span class="icon action-menu ion-android-more"></span>
+                </div>
+
+            </div>
+
+        </div>
+
+        {{#compare ../original.subject "==" original.headers.Subject}}
+
+            <div class="different-subject ellipsis full">
+                {{original.headers.Subject}}
+            </div>
+
+        {{/compare}}
+
+        <div class="message">
+            <!-- {{original.TextBody}} -->
+            {{{display_bodies this}}}
+        </div>
+
+        <!-- "quoted text" like signature, additional messages, etc (todo) -->
+
+    </div>
