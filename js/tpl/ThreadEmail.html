@@ -3,14 +3,14 @@
 
         <div class="clearfix">
             <div class="three-quarters" style="color:#222;font-size:16px;">
-                {{senderName original.headers.From_Parsed}}&nbsp;
+                {{personName model.original.headers.From_Parsed.[0]}}&nbsp;
             </div>
             <div class="quarter text-right">
-                {{receivedDatetimeTiny common.date}}
+                {{receivedDatetimeTiny model.common.date}}
             </div>
         </div>
         <div class="" style="color: #777;padding-top:8px;">
-            {{{display_bodies this true}}}
+            {{{display_bodies model true}}}
         </div>
 
     </div>
@@ -22,26 +22,26 @@
                 <!-- Sender, recipient, mailing list, etc. -->
 
                 <div class="date-received">
-                    {{receivedDatetime common.date}}
+                    {{receivedDatetime model.common.date}}
                 </div>
 
                 <div class="sender">
-                    {{senderName original.headers.From_Parsed}}&nbsp;
+                    {{personName model.original.headers.From_Parsed.[0]}}&nbsp;
                 </div>
 
                 <div class="simple-recipients">
                     <!-- Should test if I have multiple incoming accounts, and say which account it is for (don't show my default account) -->
                     
-                    {{#each original.headers.To_Parsed}}
+                    {{#each model.original.headers.To_Parsed}}
                         <span class="recipient-name to-type">{{personName this}}</span>
                     {{/each}}
-                    {{#if original.headers.Cc_Parsed}}
-                        {{#each original.headers.Cc_Parsed}}
+                    {{#if model.original.headers.Cc_Parsed}}
+                        {{#each model.original.headers.Cc_Parsed}}
                             <span class="recipient-name cc-type">{{personName this}}</span>
                         {{/each}}
                     {{/if}}
-                    {{#if original.headers.Bcc_Parsed}}
-                        {{#each original.headers.Bcc_Parsed}}
+                    {{#if model.original.headers.Bcc_Parsed}}
+                        {{#each model.original.headers.Bcc_Parsed}}
                             <span class="recipient-name bcc-type">{{personName this}}</span>
                         {{/each}}
                     {{/if}}
@@ -51,22 +51,22 @@
                 <div class="complex-recipients nodisplay">
 
                     <div class="sender-email">
-                        <small>{{senderEmail original.headers.From_Parsed}}</small>
+                        <small>{{senderEmail model.original.headers.From_Parsed}}</small>
                     </div>
 
                     <div class="recipient-name">
-                        <small>To: {{#each original.headers.To_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
+                        <small>To: {{#each model.original.headers.To_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
                     </div>
 
-                    {{#if original.headers.Cc_Parsed}}
+                    {{#if model.original.headers.Cc_Parsed}}
                         <div class="recipient-name">
-                            <small>CC: {{#each original.headers.Cc_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
+                            <small>CC: {{#each model.original.headers.Cc_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
                         </div>
                     {{/if}}
 
-                    {{#if original.headers.Bcc_Parsed}}
+                    {{#if model.original.headers.Bcc_Parsed}}
                         <div class="recipient-name">
-                            <small>CC: {{#each original.headers.Bcc_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
+                            <small>CC: {{#each model.original.headers.Bcc_Parsed}}{{personNameAndEmail this}}{{/each}}</small>
                         </div>
                     {{/if}}
 
@@ -77,7 +77,7 @@
             <div class="third">
 
                 <div class="text-right action-buttons">
-                    <span class="icon action-star ion-ios7-star{{#ifCondIn "\\Starred" original.labels}}{{else}}-outline{{/ifCondIn}}"></span>
+                    <span class="icon action-star ion-ios7-star{{#ifCondIn "\\Starred" model.original.labels}}{{else}}-outline{{/ifCondIn}}"></span>
                     <span class="icon action-menu ion-android-more"></span>
                 </div>
 
@@ -85,18 +85,29 @@
 
         </div>
 
-        {{#compare ../original.subject "==" original.headers.Subject}}
-
+        {{#compare threadModel.original.subject "!=" model.original.headers.Subject}}
+            <!-- still shows "RE:" and similar, so commenting it out -->
+            <!--
             <div class="different-subject ellipsis full">
-                {{original.headers.Subject}}
+                {{model.original.headers.Subject}}
             </div>
-
+            -->
         {{/compare}}
 
         <div class="message">
-            <!-- {{original.TextBody}} -->
-            {{{display_bodies this}}}
+            <!-- {{model.original.TextBody}} -->
+            {{{display_bodies model}}}
         </div>
+
+        {{#if media_attachments}}
+            <div class="media_attachments">
+                {{#each media_attachments}}
+                    <div class="photo_attachment">
+                        <img src="{{thumbs.basewidth300.path}}" width="100%" />
+                    </div>
+                {{/each}}
+            </div>
+        {{/if}}
 
         <!-- "quoted text" like signature, additional messages, etc (todo) -->
 

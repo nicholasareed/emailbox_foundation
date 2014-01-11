@@ -1,24 +1,24 @@
-<div class="slide-list-item__top {{#unless Email}}still-loading{{/unless}}" data-read="{{lastReadStatus Email}}">
-    {{#if Email}}
+<div class="slide-list-item__top {{#unless Email}}still-loading{{/unless}}" data-read="{{lastReadStatus model.Email}}">
+    {{#if model.Email}}
     	<div class="clearfix">
-        	<div class="sender ellipsis three-quarters">{{thread_participants_pretty Email}}</div>
-        	<div class="datetime quarter">{{shorttime attributes.last_message_datetime}}</div>
+        	<div class="sender ellipsis three-quarters">{{thread_participants_pretty model.Email}}</div>
+        	<div class="datetime quarter">{{shorttime model.attributes.last_message_datetime}}</div>
         </div>
         <div class="clearfix">
             <div class="three-quarters">
-                <div class="subject ellipsis">{{original.subject}}</div>
+                <div class="subject ellipsis">{{model.original.subject}}&nbsp;</div>
             </div>
             <div class="quarter text-right action-star">
-                <span class="icon ion-ios7-star{{#unless attributes.labels.Starred}}-outline{{/unless}}"></span>
+                <span class="icon ion-ios7-star{{#unless model.attributes.labels.Starred}}-outline{{/unless}}"></span>
             </div>
         </div>
-        <div class="last_message ellipsis">{{attributes.last_message}}</div>
+        <div class="last_message ellipsis">{{model.attributes.last_message}}</div>
         <div class="action_item">
-            {{#ifEmailAction Email}}
-                <span class="complete-icon"><span class="icon ion-checkmark"></span>&nbsp;{{email_action_complete Email}}</span>
+            {{#ifEmailAction model.Email}}
+                <span class="complete-icon"><span class="icon ion-checkmark"></span>&nbsp;{{email_action_complete model.Email}}</span>
                 <span class="transit-icon">Please Wait</span>
                 <span class="pre-complete">
-                    Long-tap to {{email_action Email}}
+                    Long-tap to {{email_action model.Email}}
                 </span>
             {{/ifEmailAction}}
         </div>
@@ -26,12 +26,41 @@
         <div class="env-spinner"><div class="envelope"></div><div class="env-fold"></div></div>
     {{/if}}
 </div>
-<div class="slide-list-item__bottom_left text-right">
-	<p><span>X<br />Late</span></p>
+<div class="slide-list-item__bottom slide-list-item__bottom_left text-right">
+	<p><span>Options&nbsp;<i class="icon ion-pricetag"></i>&nbsp;</span></p>
 </div>
-<div class="slide-list-item__bottom_right">
-	<p><span>&#10004;<br />Done!</span></p>
+<div class="slide-list-item__bottom slide-list-item__bottom_left_complete">
+    <div class="table-cell-middle">
+        <div class="clearfix">
+            <div class="three-quarters text-left">
+                <div class="thread-slide-options">
+                    <div class="slide-button-option {{#if model.attributes.labels.todo}}active{{/if}}" data-action="label" data-label="todo">
+                        <i class="ion ion-pricetag"></i> TODO
+                    </div>
+                    <div class="slide-button-option {{#if model.attributes.labels.Starred}}active{{/if}}" data-action="star">
+                        <i class="ion ion-star"></i> STAR
+                    </div>
+                    <div class="slide-button-option {{#if model.app.AppPkgDevMinimail.note}}active{{/if}}" data-action="note">
+                        NOTE
+                    </div>
+                </div>
+            </div>
+            <div class="quarter text-right">
+                <div class="slide-button-option" data-action="back" style="border: 0px;">
+                    <i class="icon ion-ios7-arrow-back"></i> BACK
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="slide-list-item__bottom_complete">
-	<p><i class="icon-ios7-undo-outline"></i><br />Tap to Undo</p>
+<div class="slide-list-item__bottom slide-list-item__bottom_right">
+	<p><span>&nbsp;<i class="icon ion-checkmark"></i>&nbsp;Archive</span></p>
 </div>
+<div class="slide-list-item__bottom slide-list-item__bottom_right_complete undo-archive">
+    <p><span>&nbsp;<i class="icon ion-checkmark"></i>&nbsp;Tap to Un-Archive</span></p>
+</div>
+<!--
+<div class=slide-list-item__bottom "slide-list-item__bottom_complete">
+	<p><i class="icon-ios7-undo-outline"></i>&nbsp;Tap to Undo</p>
+</div>
+-->

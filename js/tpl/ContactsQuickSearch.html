@@ -1,75 +1,5 @@
 
-    <div class="reply-bar">
-        <div>
-            <span class="reply-init">Reply</span>
-            <span class="">Fwd</span>
-            <span class=""><span class="icon ion-ios7-camera-outline"></span></span>
-            <span class=""><span class="icon ion-ios7-compose-outline"></span></span>
-            <span class=""><span class="icon ion-paperclip"></span></span>
-        </div>
-        <div class="with-fake-shadow"></div>
-    </div>
-
-    <div class="compose-bar nodisplay">
-        <div class="textfield-holder">
-            <textarea class="compose-textarea" placeholder="text here..."></textarea>
-        </div>
-        <div class="attachment-holder-bar">
-
-        </div>
-        <div class="">
-            <span class="add-picture-button"><span class="icon ion-ios7-camera-outline"></span></span>
-            <span class="add-picture-button" data-source-type="library"><span class="icon ion-ios7-albums-outline"></span></span>
-            <span class="add-drawing-button"><span class="icon ion-ios7-compose-outline"></span></span>
-            <span class="add-file-button"><span class="icon ion-paperclip"></span></span>
-            <span class="send-button">
-                <span class="compose-button-icon-text green">
-                    <span>SEND</span>&nbsp;<span class="icon ion-ios7-paperplane-outline"></span>
-                </span>
-            </span>
-        </div>
-        <div class="with-fake-shadow"></div>
-    </div>
-
-
-    
-    <script id="t_contacts_quick_add" type="text/x-handlebars-template" class="partial">
-
-        <div class="quick_contacts">
-                
-            <div class="btn-toolbar">
-                <div class="btn-group">
-                    {{#if in_thread}}
-                        <a href="#tab1" class="btn btn-inverse active" data-toggle="tab">In Thread</a>
-                    {{/if}}
-                    <a href="#tab2" class="btn btn-inverse" data-toggle="tab">Frequent</a>
-                </div>
-            </div>
-
-            <div class="tab-content">
-                {{#if in_thread}}
-                    <div id="tab1" class="active">
-                        {{#each in_thread}}
-                            <div class="contact" data-email="{{this}}">
-                                {{this}}
-                            </div>
-                        {{/each}}
-                    </div>
-                {{/if}}
-                <div id="tab2">
-                    <div class="no_frequent">
-                        Frequent (unavailable)
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </script>
-
-
-    <script id="t_contacts_searching_init" type="text/x-handlebars-template" class="partial">
-
+    {{#if show_init}}
         <div class="searching_contacts">
             
             <div class="before_searching">
@@ -77,12 +7,9 @@
             </div>
 
         </div>
+    {{/if}}
 
-    </script>
-
-
-    <script id="t_contacts_searching_results" type="text/x-handlebars-template" class="partial">
-
+    {{#if show_total}}
         {{#compare total "!=" null}}
             {{#if total}}
                 {{#each result}}
@@ -103,5 +30,29 @@
             </div>
         {{/compare}}
 
+    {{/if}}
 
-    </script>
+    {{#if show_quick}}
+        <div class="quick_contacts">
+
+            <div class="tab-content">
+                {{#if in_thread}}
+                    <div id="tab1" class="active">
+                        {{#each in_thread}}
+                            <div class="contact" data-email="{{this}}">
+                                {{this}}
+                            </div>
+                        {{/each}}
+                    </div>
+                {{/if}}
+                <div id="tab2">
+                    <div class="no_frequent">
+                        Frequent (unavailable)
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    {{/if}}
+
+

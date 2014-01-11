@@ -1,0 +1,54 @@
+
+
+    <div class="topcoat-navigation-bar with-slide-nav footer-bar multi-select-footer animate-slide-up">
+        <div class="topcoat-navigation-bar__item left third text-center multi-deselect">
+
+            <span class="nav-button-icon-text">
+                <span class="icon ion-close"></span>&nbsp;<span>DESELECT</span>
+            </span>
+
+        </div>
+        <div class="topcoat-navigation-bar__item left third text-center multi-middle-button">
+            
+            <span class="nav-button-icon-text">
+                <span class="icon ion-checkmark"></span>&nbsp;<span>ARCHIVE</span>
+            </span>
+
+        </div>
+        <div class="topcoat-navigation-bar__item left third text-center multi-right-button">
+
+            <span class="nav-button-icon-text">
+                <span class="icon ion-navicon-round"></span>&nbsp;<span>OPTIONS</span>
+            </span>
+
+        </div>
+    </div>
+
+	<ul class="topcoat-list list slide-list-items">
+
+		{{#each threads}}
+
+		    <li class="topcoat-list__item normal-thread slide-list-item" data-id="{{_id}}">
+		        <div class="slide-list-item__top">
+		        	<div class="clearfix no_attachment">
+		            	<div class="sender ellipsis three-quarters">{{original.subject}}</div>
+		            	<div class="datetime quarter">{{shorttime attributes.last_message_datetime}}</div>
+		            </div>
+		            <div class="subject ellipsis">{{original.subject}}</div>
+		            <div class="last_message ellipsis">{{attributes.last_message}}</div>
+		        </div>
+		        <div class="slide-list-item__bottom_left text-right">
+		        	<p><span>X<br />Late</span></p>
+		        </div>
+		        <div class="slide-list-item__bottom_right">
+		        	<p><span>&#10004;<br />Done!</span></p>
+		        </div>
+		        <div class="slide-list-item__bottom_complete">
+		        	<p><i class="icon-ios7-undo-outline"></i><br />Tap to Undo</p>
+		        </div>
+		    </li>
+
+		{{/each}}
+
+	</ul>
+

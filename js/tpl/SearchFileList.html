@@ -1,0 +1,85 @@
+
+<div class="search_results_header result-count searching">
+
+    <span class="rcount"></span>
+    <span class="waiting">Finding</span> Results
+
+</div>
+
+<ul class="topcoat-list list attachment-list-items">
+
+    {{#each files}}
+
+        
+        <div class="attachment" data-path="{{attachment.path}}" data-tmp-id="{{id}}">
+
+            <div class="clearfix">
+
+                <!-- Display preview image or nothing-->
+                {{#if attachment.thumbs}}
+                    <div class="two-thirds preview">
+                        
+                        {{{attachment_small_preview attachment}}}&nbsp;
+
+                    </div>
+
+                    <div class="third">
+
+                        <div class="attachment-info">
+
+                            <div class="quick_datetime">
+                                {{shorttime date}}
+                            </div>
+
+                            <div class="filename ellipsis full">
+                                {{attachment.name}}
+                            </div>
+
+                            <div class="subject ellipsis full">
+                                {{subject}}
+                            </div>
+
+                            <div class="attachment-type ellipsis full">
+                                {{attachment.type}}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {{else}}
+
+                    <div class="full">
+
+                        <div class="attachment-info">
+
+                            <div class="quick_datetime">
+                                {{shorttime date}}
+                            </div>
+
+                            <div class="filename ellipsis full">
+                                {{attachment.name}}
+                            </div>
+
+                            <div class="subject ellipsis full">
+                                {{subject}}
+                            </div>
+
+                            <div class="attachment-type ellipsis full">
+                                {{attachment.type}}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                {{/if}}
+
+            </div>
+
+        </div>
+
+    {{/each}}
+
+</ul>

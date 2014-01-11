@@ -9,7 +9,7 @@
     </div>
     <div class="topcoat-navigation-bar__item left quarter">
         <h1 class="topcoat-navigation-bar__title slide-menu-button text-right">
-            <span class="icon ion-navicon-round"></span>
+            <span style="font-size:16px;">ACTIONS&nbsp;</span> <span class="icon ion-navicon-round"></span>
         </h1>
     </div>
 </div>
@@ -17,29 +17,30 @@
     <div class="topcoat-list__container side-nav__list__container">
         <ul class="topcoat-list side-nav__list">
             <li class="topcoat-list__item side-nav__list__item">
-                <a href="#" class="side-nav__button">Item</a>
-            </li>
-            <li class="topcoat-list__item side-nav__list__item is-active">
-                <a href="#" class="side-nav__button">Item</a>
+                <a href="#" class="side-nav__button {{#if model.attributes.labels.todo}}active{{/if}}" data-action="label" data-label="todo">TODO</a>
             </li>
             <li class="topcoat-list__item side-nav__list__item">
-                <a href="#" class="side-nav__button">Item</a>
+                <a href="#" class="side-nav__button {{#if model.attributes.labels.Starred}}active{{/if}}" data-action="star">Star</a>
             </li>
+            <li class="topcoat-list__item side-nav__list__item">
+                <a href="#" class="side-nav__button note-init {{#if model.app.AppPkgDevMinimail.note}}active{{/if}}" data-action="note">NOTE</a>
+            </li>
+
         </ul>
     </div>
 </nav>
 
-<div class="topcoat-list__container scroller main-content" style="top:3.0rem; background: #eee;">
+<div class="topcoat-list__container scroller main-content thread-content" style="top:3.0rem; background: #eee;">
 
 	<!-- Display Thread -->
-    {{#if Email}}
+    {{#if model.Email}}
         
         <div class="thread-subject">
             <div class="ellipsis full">
-                {{original.subject}}
+                {{model.original.subject}}
             </div>
             <div class="labels">
-                {{#each attributes.labels}}
+                {{#each model.attributes.labels}}
                     {{#if this}}
                         <span>{{@key}}</span>
                     {{/if}}
@@ -47,11 +48,22 @@
             </div>
         </div>
 
+        <div class="note note-init {{#if model.app.AppPkgDevMinimail.note}}active{{/if}}">
+            <div class="note_header">
+                Note
+            </div>
+            <div class="note_content">
+                {{model.app.AppPkgDevMinimail.note}}
+            </div>
+            <div class="with-fake-shadow"></div>
+        </div>
+
         <div class="email-list">
 
         </div>
 
         <div id="ThreadWrite">
+            <div classs="reply-holder"></div>
         </div>
 
         <div class="email-show-new nodisplay"><div class="with-fake-shadow">Show New Emails</div></div>

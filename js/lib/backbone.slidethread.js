@@ -141,6 +141,10 @@
                         left: 0,
                         opacity: 1
                     });
+                    console.log('Immediate removal');
+
+                    $(elem).removeClass('sliding-left');
+                    $(elem).removeClass('sliding-right');
                 } else {
                     // Animate back
                     // - could potentially cause problems
@@ -407,7 +411,6 @@
                 var that = this,
                     elem = e.currentTarget;
 
-
                 console.log('ENDENDENDENDEND');
                 
                 // $(elem).parents('.scroller').css('overflow-y','auto');
@@ -417,7 +420,7 @@
                     // shorttap or longtap
                     var newTime = new Date().getTime();
                     var elapsed = newTime - parseInt($(elem).attr('finger-time'), 10);
-                    if(elapsed < 300){
+                    if(elapsed < 300 && !that.$parent_controller.hasClass('multi-select-mode')){
                         console.log('shorttap1');
                         $(elem).trigger('shorttap-undo', this);
                     } else {
@@ -425,7 +428,7 @@
                         // $(elem).trigger('longtap', this);
                     }
 
-                    return false;
+                    return;
                 }
                 if($(elem).hasClass('touch_start')){
 

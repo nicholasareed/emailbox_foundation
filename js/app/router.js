@@ -62,10 +62,13 @@ define(function (require) {
             }
             require(["app/models/thread", "app/views/Home"], function (models, HomeView) {
                 var homeView = new HomeView({
-                    collection: new models.ThreadCollection([],{
-                        type: type,
-                        text: text
-                    })
+                    title: text,
+                    type: type, 
+                    text: text
+                    // collection: new models.ThreadCollection([],{
+                    //     type: type,
+                    //     text: text
+                    // })
                 });
                 // homeView.delegateEvents();
                 // homeView.delegateEventsCustom();

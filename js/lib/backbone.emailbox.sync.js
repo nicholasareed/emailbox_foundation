@@ -16,6 +16,7 @@
     "use strict";
 
 
+    var Utils   = require('utils');
 
     /**
      * Semaphore mixin; can be used as both binary and counting.
@@ -111,6 +112,8 @@
 
     function emailbox_sync_model(method, model, options) {
 
+        // var diff_match_patch     = require('dmp');
+
         // console.log('backbone model sync overwritten');
         // console.log('options');
         // console.log(options);
@@ -121,9 +124,67 @@
 
         switch (method) {
             case 'create':
+                console.log('creating model');
+                debugger;
                 break;
 
             case 'update':
+                console.log('updating model');
+                console.log(method, model, options);
+
+                // Get changed attributes and update those only
+                // var changed = model.changed
+                var changed = model.changedAttributes();
+
+                var modelName = model.__proto__.modelName;
+                var data = {
+                    model: modelName,
+                    id: model.get('_id'),
+                    paths: {
+                        '$set' : changed
+                    }
+                };
+
+                options.data = options.data || {}; // set default options data, and overwrite
+
+                _.extend(data, options.data);
+
+                Api.update({
+                    data: data,
+                    success: function(response){ // ajax arguments
+
+                        if(response.code != 200){
+                            console.log('=error');
+                            model._errLast = true;
+                            if(options.error) options.error(this,response);
+                            dfd.reject();
+                            return;
+                        }
+
+                        // Make sure there was one result updated
+                        if(response.data != 1){
+                            // Shoot!
+                            console.error('Failed updating a single');
+                            if(options.error) options.error(this,response);
+                            dfd.reject();
+                            return;
+                        }
+
+                        // Return single value
+                        window.setTimeout(function(){
+
+                            // Resolve
+                            dfd.resolve(model.attributes);
+
+                            // Fire success function
+                            if(options.success){
+                                options.success(model.attributes);
+                            }
+                        },1);
+                    
+                    }
+                });
+
                 break;
 
             case 'delete':
@@ -142,12 +203,21 @@
                         _id: model.get('_id') 
                     },
                     fields: this.search_fields,
-                    limit: 1
+                    limit: 1,
+
+                    cache: true // enable patching
                 };
 
                 options.data = options.data || {}; // set default options data, and overwrite
 
                 _.extend(data, options.data);
+
+
+                // Get token hash for this query
+                var token = Utils.base64.encode(JSON.stringify(data));
+                if(App.Data.Cache.Patching[token] != undefined){
+                    data.hash = App.Data.Cache.Patching[token].hash;
+                }
 
                 Api.search({
                     data: data,
@@ -163,6 +233,53 @@
 
                         model._fetched = true;
                         model._errLast = false;
+
+                        // Patching?
+                        if(response.hasOwnProperty('patch')){
+                            // returned a patch
+
+                            // do the patching
+                            // - need to get our previous edition
+                            // - apply the patch
+                            // - re-save the data
+
+                            // Get previous version of data
+                            // - stored in memory, not backed up anywhere
+                            // - included hash+text
+                            try {
+                                // console.log(collection.model.internalModelName + '_' + model.id);
+                                if(App.Data.Cache.Patching[token].text.length > 0){
+                                    // ok
+
+                                }
+                            } catch(err){
+                                // No previous cache to compare against!
+                                // - this should never be sent if we're sending a valid hash
+                                console.error('HUGE FAILURE CACHING!');
+                                console.log(err);
+                                return false;
+                            }
+
+                            // Create patcher
+                            var dmp = new diff_match_patch();
+
+                            // Build patches from text
+                            var patches = dmp.patch_fromText(response.patch);
+
+                            // get our result text!
+                            var result_text = dmp.patch_apply(patches, App.Data.Cache.Patching[token].text);
+
+                            // Convert text to an object
+                            try {
+                                response.data = JSON.parse(result_text[0]); // 1st, only 1 patch expected
+                            } catch(err){
+                                // Shoot, it wasn't able to be an object, this is kinda fucked now
+                                // - need to 
+                                console.error('Failed recreating JSON');
+                                return false;
+                            }
+
+                        }
 
                         // console.log('Calling success');
 
@@ -183,6 +300,12 @@
                             }
                             return;
                         }
+
+                        // Update cache for patching
+                        App.Data.Cache.Patching[token] = {
+                            hash: response.hash,
+                            text: JSON.stringify(response.data)
+                        };
 
                         // Return single value
                         window.setTimeout(function(){
@@ -319,9 +442,13 @@
 
         switch (method) {
             case 'create':
+                console.log('creating collection');
+                debugger;
                 break;
 
             case 'update':
+                console.log('updating collection');
+                debugger;
                 break;
 
             case 'delete':
@@ -373,15 +500,22 @@
                     model: modelName,
                     conditions: this.search_conditions,
                     fields: this.search_fields,
-                    limit: 10,
-                    sort: {
+                    limit: this.search_limit || 10,
+                    sort: this.sort_conditions || {
                         '_id' : -1
-                    }
+                    },
+                    cache: true
                 };
 
                 options.data = options.data || {}; // set default options data, and overwrite
 
                 _.extend(data, options.data);
+
+                // Get token hash for this query
+                var token = Utils.base64.encode(JSON.stringify(data));
+                if(App.Data.Cache.Patching[token] != undefined){
+                    data.hash = App.Data.Cache.Patching[token].hash;
+                }
 
                 Api.search({
                     data: data,
@@ -398,6 +532,53 @@
                         model._errLast = false;
                         model._fetched = true;
                         
+                        // Patching?
+                        if(response.hasOwnProperty('patch')){
+                            // returned a patch
+
+                            // do the patching
+                            // - need to get our previous edition
+                            // - apply the patch
+                            // - re-save the data
+
+                            // Get previous version of data
+                            // - stored in memory, not backed up anywhere
+                            // - included hash+text
+                            try {
+                                // console.log(collection.model.internalModelName + '_' + model.id);
+                                if(App.Data.Cache.Patching[token].text.length > 0){
+                                    // ok
+
+                                }
+                            } catch(err){
+                                // No previous cache to compare against!
+                                // - this should never be sent if we're sending a valid hash
+                                console.error('HUGE FAILURE CACHING!');
+                                console.log(err);
+                                return false;
+                            }
+
+                            // Create patcher
+                            var dmp = new diff_match_patch();
+
+                            // Build patches from text
+                            var patches = dmp.patch_fromText(response.patch);
+
+                            // get our result text!
+                            var result_text = dmp.patch_apply(patches, App.Data.Cache.Patching[token].text);
+
+                            // Convert text to an object
+                            try {
+                                response.data = JSON.parse(result_text[0]); // 1st, only 1 patch expected
+                            } catch(err){
+                                // Shoot, it wasn't able to be an object, this is kinda fucked now
+                                // - need to 
+                                console.error('Failed recreating JSON');
+                                return false;
+                            }
+
+                        }
+
                         // console.log('Calling success');
 
                         // After patching (if any occurred)
@@ -407,6 +588,12 @@
                         var tmp = _.map(response.data,function(v){
                             return v[modelName];
                         });
+
+                        // Update cache for patching
+                        App.Data.Cache.Patching[token] = {
+                            hash: response.hash,
+                            text: JSON.stringify(response.data)
+                        };
 
                         // Return single value
                         window.setTimeout(function(){

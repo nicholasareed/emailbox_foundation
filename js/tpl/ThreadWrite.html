@@ -1,8 +1,8 @@
 
-    <div class="reply-bar">
+    <div class="reply-bar major-elem">
         <div>
             <span class="reply-init">Reply</span>
-            <span class="">Fwd</span>
+            <!--<span class="">Fwd</span>-->
             <span class=""><span class="icon ion-ios7-camera-outline"></span></span>
             <span class=""><span class="icon ion-ios7-compose-outline"></span></span>
             <span class=""><span class="icon ion-paperclip"></span></span>
@@ -10,7 +10,7 @@
         <div class="with-fake-shadow"></div>
     </div>
 
-    <div class="compose-bar nodisplay">
+    <div class="compose-bar major-elem nodisplay">
         <div id="contacts-holder">
             Testing here
         </div>
@@ -25,11 +25,28 @@
             <span class="add-picture-button" data-source-type="library"><span class="icon ion-ios7-albums-outline"></span></span>
             <span class="add-drawing-button"><span class="icon ion-ios7-compose-outline"></span></span>
             <span class="add-file-button"><span class="icon ion-paperclip"></span></span>
-            <span class="send-button">
+            <span class="send-button" data-status="green">
                 <span class="compose-button-icon-text green">
                     <span>SEND</span>&nbsp;<span class="icon ion-ios7-paperplane-outline"></span>
                 </span>
+                <span class="compose-button-icon-text yellow">
+                    <span>WAIT</span>&nbsp;<span class="icon ion-ios7-clock-outline"></span>
+                </span>
             </span>
+        </div>
+        <div class="with-fake-shadow"></div>
+    </div>
+
+    <div class="waiting-on-sent major-elem nodisplay">
+        <div class="tap-to-cancel">
+            Tap to cancel sending
+        </div>
+        <div class="with-fake-shadow"></div>
+    </div>
+
+    <div class="waiting-on-cancel-sent major-elem nodisplay">
+        <div class="tap-to-cancel">
+            Canceling sending...
         </div>
         <div class="with-fake-shadow"></div>
     </div>

@@ -40,7 +40,7 @@ Hammer.defaults = {
     // more settings are defined per gesture at gestures.js
 };
 
-alert('using hammer');
+// alert('using hammer');
 
 // detect touchevents
 Hammer.HAS_POINTEREVENTS = navigator.pointerEnabled || navigator.msPointerEnabled;

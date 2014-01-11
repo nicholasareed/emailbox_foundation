@@ -6,11 +6,14 @@ define(function (require) {
         _                   = require('underscore'),
         Backbone            = require('backbone-adapter'),
         // EmployeeListView    = require('app/views/EmployeeList'),
+        ThreadListView     = require('app/views/ThreadList'),
         ThreadSlideView     = require('app/views/ThreadSlide'),
 
         models              = require('app/models/thread'),
         models_email        = require('app/models/email'),
         tpl                 = require('text!tpl/Home.html'),
+
+        Utils               = require('utils'),
 
         Handlebars          = require('handlebars'),
         template            = Handlebars.compile(tpl);
@@ -18,63 +21,21 @@ define(function (require) {
 
     return Backbone.View.extend({
 
-        initialize: function () {
+        initialize: function (options) {
             var that = this;
             _.bindAll(this, 
-                'multi_options',
-                'multi_deselect',
-                'sort_list_elem',
                 'appendSubview',
-                'clearSubviews');
+                'clearSubviews',
+                'switch_labelview');
 
-            this.collection.on('reset', function(collection){
+            this.options = options;
 
-                // Re-render base view
-                that.render();
-
-                // Fetch the emails for this Thread
-                collection.each(function(model){
-
-                    // Setup the subview for this model
-                    that.appendSubview(that.$('.slide-list-items'), new ThreadSlideView({
-                        model: model
-                    }));
-
-                });
-            }, this);
-            this.collection.on('add', function(model){
-
-                // Setup the subview for this model
-                that.appendSubview(that.$('.slide-list-items'), new ThreadSlideView({
-                    model: model
-                }));
-
-                that.sort_list_elem();
-
-            });
-            this.collection.on('sort', function(collection){
-                // Update the sort values for each model
-                collection.each(function(model, index){
-                    // Emit event on model (tell it the new position)
-                    model.trigger('resorted', index); // the subView is listening on the model
-                });
-
-                that.sort_list_elem();
-            });
-
-            // Listen for newly-added emails
-            this._apiEvents.push(
-                Api.Event.on({
-                    event: ['Email.new', 'Email.action', 'Thread.action']
-                },function(result){
-                    that.collection.fetch();
-                })
-            );
-
-            this.collection.fetch({reset: true});
+            // Initialized, so create the collection (that can be switched out later, for different folder/label views
 
             this.render();
 
+            // Setup the default (Inbox) label/folder view
+            that.switch_labelview(options.type, options.text);
 
             // Load UserEmailAccount
             if(App.Data.UserEmailAccount == undefined){
@@ -84,6 +45,7 @@ define(function (require) {
                     App.Data.UserEmailAccount = new models_UEA.UserEmailAccountCollection();
                     App.Data.UserEmailAccount_Quick = [];
                     App.Data.UserEmailAccount.on('reset', function(collection){
+                        // debugger;
                         App.Data.UserEmailAccount_Quick = _.map(collection.toJSON(),function(account){
                             return account.email;
                         });
@@ -92,23 +54,99 @@ define(function (require) {
                 });
 
             }
+
+            // Load Contacts
+            if(App.Data.Store.Contact == null){
+
+                require(["app/models/contact"], function (models_Contact) {
+                    // var models_UEA = require('app/models/user_email_account');
+                    App.Data.Store.Contact = new models_Contact.ContactCollection();
+                    // App.Data.Store.Contact_Quick = [];
+                    App.Data.Store.Contact.on('reset', function(collection){
+                        console.log('App.Data.Contact reset');
+                        App.Data.Store.Contact.parse_and_sort_contacts();
+                        // App.Data.Store.Contact_Quick = _.map(collection.toJSON(),function(contact){
+                        //     return account.email;
+                        // });
+                    });
+                    App.Data.Store.Contact.search_limit = 5000;
+                    App.Data.Store.Contact.fetch({reset: true});
+                    // debugger;
+                });
+
+            }
         },
 
         _subViews: [],
         appendSubview: function($elem, subView){
-            this._subViews.push(subView);
+            // Append subView to DOM element
+            // - make sure View doesn't already exist
+            if(_.indexOf(this._subViews, subView) == -1){
+                // Push to subView (doesn't exist yet)
+                this._subViews.push(subView);
+            }
+            
             $elem.append(subView.$el);
             // $el.html(subView.render().$el);
         },
         clearSubviews: function(){
             // Clear subviews
             _.each(this._subViews, function(subView){
-                subView.close();
+                // subView.close();
                 subView.remove();
             });
 
             this._subViews = [];
         }, 
+
+        _folderViews: {},
+        _currentFolderView: undefined,
+
+        switch_labelview: function(type, text){
+            var that = this;
+            // Clear any existing ones
+
+            // that.$('.main-content').empty();
+            if(this._currentFolderView != undefined){
+                this._currentFolderView.remove();
+            }
+
+            // See if view already exists for this "search" type
+            var token = Utils.base64.encode(JSON.stringify({
+                type: type,
+                text: text
+            }));
+
+            // console.log(token);
+
+            // Collection exists?
+            var tmpView = undefined;
+            if(this._folderViews[token] == undefined){
+                // view not created
+                this._folderViews[token] = new ThreadListView({
+                    collection: new models.ThreadCollection([],{
+                        type: type,
+                        text: text
+                    })
+                });
+
+            }
+
+            this._currentFolderView = this._folderViews[token];
+            this._currentCollection = this._currentFolderView.collection;
+
+            // console.log(this._currentCollection);
+
+            that.appendSubview( that.$el, this._folderViews[token] );
+
+            console.log(this._subViews);
+
+            // // re-delegate events
+            that._currentFolderView._redelegate();
+            // this._currentCollection.fetch();
+            that._currentFolderView._refreshData();
+
+        },
 
         render: function () {
 
@@ -118,8 +156,31 @@ define(function (require) {
 
             this.clearSubviews();
 
+            this.navigation_labels = [
+                {
+                    text: "Inbox"
+                },
+                {
+                    text: "Starred"
+                },
+                {
+                    text: "All Threads",
+                    type: "all"
+                },
+                {
+                    text: "todo"
+                },
+                {
+                    text: "Sent"
+                }
+            ];
+
             // Write html through Template
-            this.$el.html(template());
+            this.$el.html(template({
+                title: this.options.title,
+                navigation_labels: this.navigation_labels
+            }));
+
 
             // console.log('collection JSON');
             // console.log(this.collection.toJSON());
@@ -137,6 +198,8 @@ define(function (require) {
             'multi-change .slide-list-items' : 'multi_options', // multi-change event on List container
             'click .multi-deselect' : 'multi_deselect',
 
+            'click .side-nav__button' : 'view_label'
+
         },
 
         sort_list_elem: function(){
@@ -146,72 +209,49 @@ define(function (require) {
         },
 
         slide_menu: function(e){
-            // var cl = this.el.classList;
-            // if (cl.contains('left-nav')) {
-            //     cl.remove('left-nav');
-            // } else {
-            //     cl.add('left-nav');
-            // }
-            // // this.$el.addClass('show-multi-select');
-            this.collection.fetch();
-            this.collection.sort();
+            var cl = this.el.classList;
+            if (cl.contains('left-nav')) {
+                cl.remove('left-nav');
+            } else {
+                cl.add('left-nav');
+            }
+            // this.$el.addClass('show-multi-select');
+
+            // this._currentCollection.fetch();
+            // this._currentCollection.sort();
+
+            this._currentFolderView._refreshData();
+
         },
 
-        multi_options: function(){
-            // Displays (or hides) multi-select options
-            var that = this;
+        view_label: function(ev){
+            // Displays a different label/folder
+            var that = this,
+                elem = ev.currentTarget;
 
-            this.collection.sort();
+            var idx = parseInt($(elem).attr('data-index'), 10);
+            var label = this.navigation_labels[idx];
 
-            // Add backbutton tracking if we are displaying the multi_options
+            label.type = label.type != undefined ? label.type : 'label';
 
-            // See if there are any views that are multi-selected
-            if(this.$('.multi-selected').length > 0){
+            // Switch folder/label view
+            that.switch_labelview(label.type, label.text);
 
+            // Create a new collection and disregard the existing collection
+            // - re-initialize this collection
 
-                this.$('.slide-list-items').addClass('multi-select-mode');
-                this.$el.addClass('show-multi-select');
+            // Slide back the view
+            this.el.classList.remove('left-nav');
 
-                // this.$('.multi_select_options').removeClass('no_multi_select');
+            // Change the text
+            this.$('.slide-menu-button').text(label.text);
 
-                // this.$('.lot_options_flag').addClass('nodisplay');
-                // this.$('.footer2').addClass('nodisplay');
-            } else {
-                this.$('.slide-list-items').removeClass('multi-select-mode');
-                this.$el.removeClass('show-multi-select');
-                // this.$('.multi_select_options').addClass('no_multi_select');
-
-                // this.$('.lot_options_flag').removeClass('nodisplay');
-                // this.$('.footer2').removeClass('nodisplay');
-            }
-
-            // // On or off?
-            // // if(this.$('.all_threads').hasClass('multi-select-mode')){
-            // if(this.show_multi_options){
-            //  // Just turned on
-            //  this.$('.multi_select_options').removeClass('no_multi_select');
-            // } else {
-            //  // Turned off
-            //  this.$('.multi_select_options').addClass('no_multi_select');
-            // }
+            // Change the selection
+            this.$('.side-nav__button').removeClass('active');
+            $(elem).addClass('active');
             
             return false;
-        },
 
-        multi_deselect: function(ev){
-            // De-select any that are selected
-            var that = this;
-
-            // Remove selected
-            this.$('.multi-selected').removeClass('multi-selected')
-
-            // Remove multi-select-mode
-            this.$('.slide-list-items').removeClass('multi-select-mode');
-
-            // Call multi-options
-            that.multi_options();
-
-            return false;
         }
 
     });

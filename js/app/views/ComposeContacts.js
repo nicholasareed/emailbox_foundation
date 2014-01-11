@@ -6,15 +6,19 @@ define(function (require) {
         _                   = require('underscore'),
         Backbone            = require('backbone'),
         tpl                 = require('text!tpl/ComposeContacts.html'),
+        tpl_Searching       = require('text!tpl/ContactsQuickSearch.html'),
+        tpl_Recipient       = require('text!tpl/ContactsRecipient.html'), // basically a partial, not a complete View
         Utils               = require('utils'),
 
         Handlebars          = require('handlebars'),
-        template            = Handlebars.compile(tpl);
+        template            = Handlebars.compile(tpl),
+        template_Searching  = Handlebars.compile(tpl_Searching),
+        template_Recipient  = Handlebars.compile(tpl_Recipient);
 
     return Backbone.View.extend({
 
         initialize: function () {
-
+            _.bindAll(this, 'checking_autocomplete', 'update_autocomplete');
             // expecting a complete Email list of participants (in thread)
             this.render();
             
@@ -28,9 +32,24 @@ define(function (require) {
             'click .show_all_addresses' : 'show_all_addresses',
             'click .recipient-switcher' : 'switch_address_type',
             'click .addresses .participant' : 'remove_participant',
-            'click .addresses .shrink' : 'hide_all_addresses'
+            'click .addresses .shrink' : 'hide_all_addresses',
+
+            // 'click .address_list .add .closeButton' : 'close_dropdown',
+            'click .address_list .add .openButton' : 'quick_add_address',
+            // 'click .address_list .add .addEmail' : 'quick_add_email',
+            // 'click .quick_contacts .btn-toolbar a' : 'tab_clicked',
+            'click .addresses .contact' : 'chose_contact',
+
+            'focus .add input' : 'focus_input_add_contact',
+            'blur .add input' : 'blur_input_add_contact',
+            // 'click .searching_contacts .contact' : 'chose_contact'
 
         },
+
+        // // Add focus listener on autocomplete
+        // this.$('.add input').on('focus', $.proxy(this.focus_input_add_contact, this));
+        // this.$('.add input').on('blur', $.proxy(this.blur_input_add_contact, this));
+
 
         render: function () {
 
@@ -43,6 +62,179 @@ define(function (require) {
             this.$el.html(template(data));
 
             return this;
+        },
+
+        quick_add_address: function(ev){
+            // Opens up the quick-add dialog
+            var that = this,
+                elem = ev.currentTarget;
+
+            // Already displayed?
+            // - remove it
+            var $add = $(elem).parents('.add');
+            if($add.next() && $add.next().hasClass('quick_contacts')){
+                $add.next().remove();
+                return false;
+            }
+
+            // Remove 'searching' box
+            // - clearing the non-related elements out of the way basically (Search or QuickContacts)
+            if($add.next() && $add.next().hasClass('searching_contacts')){
+                $add.next().remove();
+                return false;
+            }
+
+
+            // // Create template
+            // var template = App.Utils.template('t_contacts_quick_add');
+
+            // append after this .add element
+            $(elem).parents('.add').after(template_Searching({
+                show_quick: true,
+                frequent: [],
+                in_thread: that.getParticipants()
+            }));
+
+            return false;
+        },
+
+        focus_input_add_contact: function(ev){
+            // Typing in the add contact input
+            var that = this,
+                elem = ev.currentTarget;
+
+            // start autocompletetimeout
+            that.current_autocomplete_elem = elem;
+
+            // Already displayed?
+            // - remove it
+            var $add = $(elem).parents('.add');
+            if($add.next() && $add.next().hasClass('searching_contacts')){
+                // $add.next().remove();
+                that.checking_autocomplete(); // run now (everything already exists though)
+                return false;
+            }
+
+            // Remove 'quick_contacts' box
+            // - only showing auto-complete or QuickContacts, not both at the same time
+            if($add.next() && $add.next().hasClass('quick_contacts')){
+                $add.next().remove();
+                // return false;
+            }
+
+            // append after this .add element
+            // - template already created
+            $(elem).parents('.add').after(template_Searching({
+                show_init: true
+            }));
+
+            // Already text typed in there?
+            that.checking_autocomplete();
+
+
+            return;
+        },
+
+        blur_input_add_contact: function(){
+            // when leaving contact search box
+            var that = this;
+
+            // Clear the timeout
+            window.clearTimeout(that.autocompleteTimeout);
+
+            return;
+        },
+
+        checking_autocomplete: function(){
+            var that = this;
+
+            that.autocompleteTimeout = window.setTimeout(function(){
+                // Check for updates to field
+                that.update_autocomplete();
+                that.checking_autocomplete();
+            },100);
+        },
+
+        update_autocomplete: function(){
+            // check for differences in input field
+            var that = this,
+                elem = that.current_autocomplete_elem,
+                search_val = $.trim($(elem).val().toLowerCase());
+
+            if(search_val == $(elem).attr('last-val')){
+                return;
+            }
+            $(elem).attr('last-val', search_val);
+
+            console.log(search_val);
+
+            var total = null,
+                return_result = null
+
+            if(search_val != ''){
+                var result = [];
+                var Contacts = App.Data.Store.Contact._parsed;
+                // console.log('Contacts length');
+                // console.log(Contacts.length);
+                // console.dir(Contacts.length);
+                _.each(Contacts, function(contact){
+                    // console.log(contact);
+                    if(contact.name.toLowerCase().indexOf(search_val) != -1){
+                        // found
+                        result.push(contact);
+                        return true;
+                    }
+                    if(contact.email.toLowerCase().indexOf(search_val) != -1){
+                        // found
+                        result.push(contact);
+                        return true;
+                    }
+                    return false;
+                });
+
+                total = result.length;
+                return_result = result.splice(0,5);
+
+            }
+
+            // Update template
+
+            // append after this .add element
+            $(elem).parents('.address_list').find('.searching_contacts').html(template_Searching({
+                show_total: true,
+                total: total,
+                result: return_result,
+                all_contacts: App.Data.Store.Contact.length
+            }));
+            // console.log(App.Data.Store.Contact);
+
+            return;
+        },
+
+        chose_contact: function(ev){
+            // add contact to To, Cc, or Bcc
+            var that = this,
+                elem = ev.currentTarget;
+
+            var email = $(elem).attr('data-email');
+
+            // Add email to html
+            // - should highlight the email address after chosen
+
+            // Remove if already in there?
+            var $exists = $(elem).parents('.address_list').find('.participant[data-email="'+email+'"]');
+            if($exists.length > 0){
+                $exists.remove();
+                ev.preventDefault();
+                ev.stopPropagation();
+                return false;
+            }
+
+            // If not exists, display it
+            $(elem).parents('.address_list').find('.add').before(template_Recipient(email));
+
+            return false;
+
         },
 
         show_all_addresses: function(ev){
@@ -97,7 +289,7 @@ define(function (require) {
         },
 
         remove_participant: function(ev){
-            // Removes a participant from the HTML
+            // Removes an email address
             var elem = ev.currentTarget;
 
             $(elem).parents('.participant').slideUp();
@@ -107,6 +299,7 @@ define(function (require) {
         },
 
         getParticipants: function(){
+            // Gets existing participants from the other emails in the thread
             var that = this;
 
             var json = this.model.toJSON(),

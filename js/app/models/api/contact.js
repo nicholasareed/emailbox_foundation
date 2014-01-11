@@ -30,10 +30,14 @@ define(function (require) {
 
             sync: Backbone.Collection.emailbox_sync,
             comparator: function(model1){
-                var fullName = model1.common.name,
-                    realFullName = fullName ? fullName : false,
-                    useAddr = realFullName ? false : true,
-                    result = useAddr && model1.common.emails.length() ? model1.common.emails[0].address : realFullName;
+                try {
+                    var fullName = model1.attributes.common.name,
+                        realFullName = fullName ? fullName : false,
+                        useAddr = realFullName ? false : true,
+                        result = useAddr && model1.attributes.common.emails.length ? model1.attributes.common.emails[0].address : realFullName;
+                } catch(err){
+                    return "";
+                }
 
                 return result;
             },
@@ -41,6 +45,68 @@ define(function (require) {
             initialize: function(models, options){
                 options = options || {};
                 this.options = options;
+            },
+
+            parse_and_sort_contacts: function(){
+
+                // eh, need to make this work with newer contact searching and adding
+
+                var contacts = _.map(this.toJSON(),function(contact){
+                    // Iterating over every contact we have
+                    // - returning an array of emails, with each email having the contact data included
+                    // - instead of sorting by contact, we go by email address as the primary display
+                    
+                    var data = {
+                        id: contact._id, 
+                        name: contact.common.name,
+                        email: ''
+                    };
+
+                    var tmp_emails = [];
+
+                    // Iterate over emails for contact
+                    // - remove emails we do not care about, like @craigslist
+                    _.each(contact.common.emails,function(email, index){
+                        var tmp_data = _.clone(data);
+
+                        // Don't use contacts that are from craigslist (too many sale- emails that we don't care about)
+                        if(email.address.indexOf('@craigslist') != -1){
+                            // return out of _.each
+                            return;
+                        }
+
+                        // Set email value
+                        tmp_data.email = email.address;
+
+                        // console.log('adding');
+                        tmp_emails.push(tmp_data);
+                    })
+
+                    if(tmp_emails.length < 1){
+                        return [];
+                    }
+
+                    // console.log('return: ' + tmp_emails.length);
+                    return tmp_emails;
+
+                });
+                contacts = _.reduce(contacts,function(contact,next){
+                    return contact.concat(next);
+                });
+                contacts = _.compact(contacts); // get rid of empty arrays
+                contacts = _.uniq(contacts);
+
+                // // // Sort
+                // // contacts = App.Utils.sortBy({
+                // //  arr: contacts,
+                // //  path: 'email',
+                // //  direction: 'desc', // desc
+                // //  type: 'string'
+                // // });
+                // console.log(contacts.length);
+
+                this._parsed = contacts;
+
             }
 
         });

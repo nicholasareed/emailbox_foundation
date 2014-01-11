@@ -1,15 +1,56 @@
 <div class="topcoat-navigation-bar">
-    <div class="topcoat-navigation-bar__item left half back-button">
+    <div class="topcoat-navigation-bar__item left quarter back-button">
         <span class="topcoat-icon-button--quiet" href="#">
           <span class="topcoat-icon topcoat-icon--back"></span>
         </span>
     </div>
+    <div class="topcoat-navigation-bar__item three-quarters text-right">
+        <span class="nav-button-icon-text" data-type="files">
+            <span class="icon ion-folder"></span> <span>FILES</span>
+        </span>
+        <!--
+        <span class="nav-button-icon-text" data-type="contacts">
+            <span class="icon ion-person-stalker"></span> <span>PEOPLE</span>
+        </span>
+    	-->
+        <span class="nav-button-icon-text active" data-type="emails">
+            <span class="icon ion-android-mail"></span> <span>EMAILS</span>
+        </span>
+    </div>
 </div>
-<div class="topcoat-list__container scroller" style="top:3.0rem;">
+<div class="topcoat-list__container scroller main-search-content" style="top:3.0rem;">
 
-	<!-- Name of Vehicle -->
-	<h1 class="vehicle_name">Search</h1>
+	<div class="search_input">
 
+		<div class="input-holder clearfix">
+			<div class="three-quarters">
+				<form class="search-form">
+					<input class="search-input-val" type="text" placeholder="Tap to start searching" value="{{last_search}}" />
+				</form>
+			</div>
+			<div class="quarter">
+				<div class="full search-button">
+					<span class="icon ion-search"><span>
+				</div>
+			</div>
+		</div>
 
+		<!--
+		<div class="add-condition">
+			<span class="">
+				<span class="icon ion-plus"></span><span class="text">Add Filter</div>
+			</span>
+		</div>
+		-->
+
+	</div>
+
+	<div class="search_results">
+
+		<div class="search_results_empty">
+			No Search Results
+		</div>
+
+	</div>
 
 </div>

@@ -163,8 +163,8 @@ define(function (require) {
                     queryOptions._success = queryOptions.success || null;
 
                     queryOptions.success = function(bodyResponse){
-
-                        responseObj = JSON.parse(bodyResponse);
+                        // console.log(bodyResponse);
+                        var responseObj = JSON.parse(bodyResponse);
                         // console.log(JSON.stringify(bodyResponse));
                         var event_id = responseObj.data.event_id;
 
@@ -204,8 +204,9 @@ define(function (require) {
 
                         // call the old success function
                         if(queryOptions._success != null){
-                            console.error('called _success');
-                            queryOptions._success.call(bodyResponse);
+                            console.info('called event _success');
+                            console.log(bodyResponse);
+                            queryOptions._success.call(this, bodyResponse, responseObj.code, responseObj.data, responseObj.msg);
                         }
 
                     }
@@ -244,10 +245,11 @@ define(function (require) {
                                 multiple: {} // object
                             },
                             success: function(response){
-                                response = JSON.parse(response);
+                                // console.log(response);
+                                // response = JSON.parse(response);
 
-                                console.log('Event response');
-                                console.log(JSON.stringify(response));
+                                // console.log('Event response');
+                                // console.log(JSON.stringify(response));
 
                                 // query has returned
                                 // - parse out the deferreds according to the indexKey
@@ -303,14 +305,17 @@ define(function (require) {
 
             },
 
-            event_remove: function(queryOptions){
+            event_cancel: function(queryOptions){
                 // Requires: event_id
-                return Api.query('/api/event/remove',queryOptions);
+                return Api.query('/api/event/cancel',queryOptions);
 
             },
 
-            query: function(url,queryOptions){
+            query: function(inputUrl,inputQueryOptions){
                 // Almost the exact same as Api.search
+                var url = '' + inputUrl,
+                    queryOptions = $.extend({}, inputQueryOptions);
+
                 var use_queue = false;
                 if(typeof queryOptions.queue == 'boolean'){
                     use_queue = queryOptions.queue;
@@ -395,10 +400,14 @@ define(function (require) {
                     // // Remove debug message
                     // App.Utils.Notification.debug.remove(k);
 
-                    // Continue with response
-                    // - should be using context or .apply(this...) ?
-                    // console.error(queryOptionsBase);
-                    queryOptionsBase.error.call(this,response);
+                    // // Continue with response
+                    // // - should be using context or .apply(this...) ?
+                    // // console.error(queryOptionsBase);
+                    // queryOptionsBase.error.call(this,response);
+
+                    // Re-try query
+                    console.error('Failed query, trying again');
+                    return Api.query(inputUrl,inputQueryOptions);
                 };
 
                 // // Check online status

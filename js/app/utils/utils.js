@@ -2,7 +2,7 @@ define(function (require) {
 
     "use strict";
 
-    var $ = require('jquery'),
+    var $ = require('jquery-adapter'),
         _ = require('underscore'),
         usePg = App.Data.usePg,
      Utils = {

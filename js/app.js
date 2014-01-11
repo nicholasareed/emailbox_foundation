@@ -12,7 +12,8 @@ require.config({
 		'backbone.relational' : 'backbone.relational',
 		'backbone.email.sync' : 'backbone.email.sync',
 		'handlebars-helpers' : '../app/utils/handlebars-helpers',
-		'socketio' : 'local_socketio'
+		'socketio' : 'local_socketio',
+		'dmp' : 'diff_match_patch_uncompressed'
 	},
 
 	map: {
@@ -29,6 +30,7 @@ require.config({
 			'app/models/thread': 'app/models/api/thread',
 			'app/models/email': 'app/models/api/email',
 			'app/models/contact': 'app/models/api/contact',
+			'app/models/attachment': 'app/models/api/attachment',
 
 			'api' : 'app/utils/api',
 			'utils' : 'app/utils/utils',
@@ -47,10 +49,14 @@ require.config({
 		'underscore': {
 			exports: '_'
 		},
-		// 'hammer' : {
-		// 	deps: ['jquery'],
-		// 	exports: 'Hammer'
-		// },
+		'hammer' : {
+			deps: ['jquery'],
+			exports: 'Hammer'
+		},
+		'dmp' : {
+			deps: [],
+			exports: 'diff_match_patch'
+		},
 		'jquery-adapter': {
 			deps: ['jquery'],
 			exports: 'jquery'
@@ -94,8 +100,12 @@ require.config({
 // global data storage if invoked here?
 var App = {
 	Data: {
+		Store: {
+			Contact: null
+		},
 		Cache: {
-			ModelReplacers: {}
+			ModelReplacers: {},
+			Patching: {} // backbone.emailboxsync
 		},
 		notifications_queue: [],
 		xy: {
@@ -108,7 +118,7 @@ var App = {
 };
 var Api = null;
 
-require(['jquery', 'backbone-adapter', 'app/router', 'credentials', 'utils', 'api'], function ($, Backbone, Router, credentials, Utils, LocalApi) {
+require(['jquery', 'backbone-adapter', 'app/router', 'credentials', 'utils', 'api','hammer','dmp'], function ($, Backbone, Router, credentials, Utils, LocalApi, Hammer, diff_match_patch) {
 
     // // Test saving a user...
     // require(["app/models/user"], function (models) {
@@ -154,6 +164,11 @@ require(['jquery', 'backbone-adapter', 'app/router', 'credentials', 'utils', 'ap
 
 		$(document).ready(function(){
 
+            // Enable swiping on the global <body>
+            Hammer($('body').get(0), {
+                swipe_velocity : 0.5
+            });
+
 			App.Data.xy.window.height = $(window).height();
 			App.Data.xy.window.width = $(window).width();
 			window.onresize = function(){
@@ -163,19 +178,23 @@ require(['jquery', 'backbone-adapter', 'app/router', 'credentials', 'utils', 'ap
 					if(!$('body').hasClass('keyboard-enabled')){
 						console.log('enabling keyboard');
 						$('body').addClass('keyboard-enabled');
-						var old_height = $('.scroller').height();
-						$('.scroller').css('height', (old_height - ($(window).height() - App.Data.xy.window.height))) + 'px';
-						$('.scroller').attr('data-old-height', old_height);
+						var normal_height = $('.scroller').height();
+						// $('.scroller').css('height', (normal_height - ($(window).height() - App.Data.xy.window.height)) + 'px');
+						$('.scroller').css('height', normal_height + 'px');
+						$('.scroller').attr('data-old-height', normal_height);
 						App.Events.trigger('keyboard-enabled');
 					}
 				} else {
+					// Keyboard is not out (probably minimized)
 					$('body').removeClass('keyboard-enabled');
-					App.Events.trigger('keyboard-disabled');
 					// $('.scroller').height( $('.scroller').attr('data-old-height') + 'px');
 					$('.scroller').css('height','auto');
+					App.Events.trigger('keyboard-disabled');
 					console.log('disabling keyboard');
-					$('<style></style>').appendTo($(document.body)).remove();
+					// $('<style></style>').appendTo($(document.body)).remove();
 				}
+				$('<style></style>').appendTo($(document.body)).remove();
+
 			}
 
 			// Instantiate Router

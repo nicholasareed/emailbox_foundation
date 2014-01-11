@@ -77,12 +77,15 @@
             return "-inv-"
         }
 
-        var now = moment();
-        if(now.diff(m, 'days') == 0){
+        var now = moment(),
+            today = moment().format('D'),
+            yesterday = moment().subtract('days',1).format('D');
+
+        if(m.format('D') == today){
             return m.format("h:mma");
         }
-        if(now.diff(m, 'days') == 1){
-            return "Yesterday";
+        if(m.format('D') == yesterday){
+            return "Y " + m.format("h:mma");
         }
 
         return m.format("MMM Do");
@@ -342,6 +345,23 @@
     /* Email-specific helpers */
 
 
+    Handlebars.registerHelper("attachment_small_preview", function(attachment) {
+        // Return preview of image
+        // - used in SearchFiles
+        // - or nothing
+
+        try {
+            if(attachment.thumbs.basewidth300){
+                return '<img src="'+ attachment.thumbs.basewidth300.path +'" max-width2="16px" max-height2="16px" />';
+            }
+        } catch(err){
+            // pass
+        }
+
+        return "&nbsp;";
+
+    });
+
 
     Handlebars.registerHelper("ifEmailAction", function(emails, options) {
         var email = _.first(emails);
@@ -446,12 +466,17 @@
             return "-inv-"
         }
 
-        var now = moment();
-        if(now.diff(m, 'days') == 0){
-            return "Today, " + m.format("h:mma");
+
+
+        var now = moment(),
+            today = moment().format('D'),
+            yesterday = moment().subtract('days',1).format('D');
+
+        if(m.format('D') == today){
+            return m.format("h:mma");
         }
-        if(now.diff(m, 'days') == 1){
-            return "Yesterday, " + m.format("h:mma");
+        if(m.format('D') == yesterday){
+            return "Y " + m.format("h:mma");
         }
 
         return m.format("ddd MMM Do, h:mma");
@@ -467,15 +492,19 @@
             return "-inv-"
         }
 
-        var now = moment();
-        if(now.diff(m, 'days') == 0){
+        var now = moment(),
+            today = moment().format('D'),
+            yesterday = moment().subtract('days',1).format('D');
+
+        if(m.format('D') == today){
             return m.format("h:mma");
         }
-        if(now.diff(m, 'days') == 1){
-            return "Yesterday";
+        if(m.format('D') == yesterday){
+            return "Y " + m.format("h:mma");
         }
 
-        return m.format("MMM D");
+        return m.format("MMM Do");
+
 
     });
 
@@ -569,6 +598,8 @@
     Handlebars.registerHelper("display_bodies", function(Email, no_nl2br) {
         // Display the first ParsedData entry
         // - hide any additional entries
+
+        no_nl2br = no_nl2br == true ? true : false;
 
         var parsedData = Email.original.ParsedData;
         // console.dir(Email.original.ParsedData);
