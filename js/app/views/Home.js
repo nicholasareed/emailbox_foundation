@@ -108,7 +108,9 @@ define(function (require) {
 
             // that.$('.main-content').empty();
             if(this._currentFolderView != undefined){
+                this._currentFolderView._close();
                 this._currentFolderView.remove();
+                // debugger;
             }
 
             // See if view already exists for this "search" type
@@ -123,10 +125,12 @@ define(function (require) {
             var tmpView = undefined;
             if(this._folderViews[token] == undefined){
                 // view not created
+                // console.log('NEW THREAD LIST VIEW');
                 this._folderViews[token] = new ThreadListView({
                     collection: new models.ThreadCollection([],{
                         type: type,
-                        text: text
+                        text: text,
+                        search_limit: 8
                     })
                 });
 
@@ -139,14 +143,53 @@ define(function (require) {
 
             that.appendSubview( that.$el, this._folderViews[token] );
 
-            console.log(this._subViews);
-
             // // re-delegate events
             that._currentFolderView._redelegate();
             // this._currentCollection.fetch();
             that._currentFolderView._refreshData();
 
         },
+
+        // _closeOut: function(){
+        //     // Execute _closeOut on subViews as well
+        //     _.each(this._subViews, function(sv){
+        //         if(sv.hasOwnProperty('_closeOut')){
+        //             sv._closeOut();
+        //         }
+        //     });
+
+        //     // Run _closeOutCustom
+        //     if(this.hasOwnProperty('_closeOutCustom')){
+        //         this._closeOutCustom();
+        //     }
+            
+        // },
+
+        // _redelegate: function(){
+
+        //     // Remove events
+        //     this.undelegateEvents();
+        //     this.delegateEvents();
+
+        //     // Custom delegation (if exists)
+        //     if(this.delegateEventsCustom != undefined){
+        //         this.delegateEventsCustom();
+        //     }
+
+        //     // Initiate _redelegate on child views
+
+        //     // _subViews
+        //     _.each(this._subViews, function(subView){
+        //         if(subView.hasOwnProperty('_redelegate')){
+        //             console.log('_redelagating2');
+        //             subView._redelegate();
+        //         }
+        //     });
+
+        //     // // Scroll listener
+        //     // this._listenForScroll();
+
+        // },
 
         render: function () {
 
@@ -200,6 +243,11 @@ define(function (require) {
 
             'click .side-nav__button' : 'view_label'
 
+        },
+
+        delegateEventsCustom: function(){
+            // Re-delegate on the displayed view?
+            this._currentFolderView._redelegate(); // Probably redundant...
         },
 
         sort_list_elem: function(){

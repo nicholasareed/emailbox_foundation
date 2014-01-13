@@ -21,12 +21,11 @@ define(function (require) {
         initialize: function () {
             var that = this;
             _.bindAll(this, 
-                'delegateEventsCustom',
                 'thread_action_option',
                 'threadslide_right',
                 'threadslide_left',
                 'thread_revert',
-                '_redelegate');
+                'delegateEventsCustom');
 
             this.model.on('reset', that.render, this);
             this.model.on('change', function(){
@@ -106,23 +105,23 @@ define(function (require) {
             });
         },
 
-        _redelegate: function(){
+        // _redelegate: function(){
 
-            // Remove events
-            this.undelegateEvents();
-            this.delegateEvents();
+        //     // Remove events
+        //     this.undelegateEvents();
+        //     this.delegateEvents();
 
-            // Custom delegation (if exists)
-            if(this.delegateEventsCustom != undefined){
-                this.delegateEventsCustom();
-            }
+        //     // Custom delegation (if exists)
+        //     if(this.delegateEventsCustom != undefined){
+        //         this.delegateEventsCustom();
+        //     }
 
-            // Initiate _redelegate on child views
-            _.each(this._subViews, function(subView){
-                subView._redelegate();
-            });
+        //     // Initiate _redelegate on child views
+        //     _.each(this._subViews, function(subView){
+        //         subView._redelegate();
+        //     });
 
-        },
+        // },
 
         render: function () {
 

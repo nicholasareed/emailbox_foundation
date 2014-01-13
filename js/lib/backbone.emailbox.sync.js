@@ -134,14 +134,38 @@
 
                 // Get changed attributes and update those only
                 // var changed = model.changed
-                var changed = model.changedAttributes();
+                var tmp_changedAttributes = model.changedAttributes(),
+                    changedAttributes = {};
+
+                // Modify changedAttributes to handle lists/arrys correctly
+                // - should update the whole thing, not just the index position
+
+                _.each(tmp_changedAttributes, function(value, key){
+                    // Determine if it is an array
+                    var nkey = key.split('.');
+                    nkey = nkey.splice(0,nkey.length-1).join('.');
+                    if(nkey.length > 0){
+                        if(Array.isArray(model.get(nkey))){
+                            changedAttributes[nkey] = model.get(nkey);    
+                            return;
+                        }
+                        // console.log(typeof(model.get(nkey)));
+                    }
+                    // By default, do the following
+                    changedAttributes[key] = value;
+                });
+                // if(changedAttributes != tmp_changedAttributes){
+                //     console.log(changedAttributes);
+                //     console.log(tmp_changedAttributes);
+                //     debugger;
+                // }
 
                 var modelName = model.__proto__.modelName;
                 var data = {
                     model: modelName,
                     id: model.get('_id'),
                     paths: {
-                        '$set' : changed
+                        '$set' : changedAttributes
                     }
                 };
 
@@ -434,7 +458,7 @@
 
     function emailbox_sync_collection(method, model, options) {
 
-        console.log('backbone collection sync overwritten');
+        // console.log('backbone collection sync overwritten');
 
         var dfd = $.Deferred();
 
@@ -517,98 +541,104 @@
                     data.hash = App.Data.Cache.Patching[token].hash;
                 }
 
-                Api.search({
-                    data: data,
-                    success: function(response){ // ajax arguments
+                var runFunc = function(data){
+                    Api.search({
+                        data: data,
+                        success: function(response){ // ajax arguments
 
-                        if(response.code != 200){
-                            console.log('=error');
-                            model._errLast = true;
-                            if(options.error) options.error(this,response);
-                            dfd.reject();
-                            return;
-                        }
+                            if(response.code != 200){
+                                console.log('=error');
+                                model._errLast = true;
+                                if(options.error) options.error(this,response);
+                                dfd.reject();
+                                return;
+                            }
 
-                        model._errLast = false;
-                        model._fetched = true;
-                        
-                        // Patching?
-                        if(response.hasOwnProperty('patch')){
-                            // returned a patch
+                            model._errLast = false;
+                            model._fetched = true;
+                            
+                            // Patching?
+                            if(response.hasOwnProperty('patch')){
+                                // returned a patch
 
-                            // do the patching
-                            // - need to get our previous edition
-                            // - apply the patch
-                            // - re-save the data
+                                // do the patching
+                                // - need to get our previous edition
+                                // - apply the patch
+                                // - re-save the data
 
-                            // Get previous version of data
-                            // - stored in memory, not backed up anywhere
-                            // - included hash+text
-                            try {
-                                // console.log(collection.model.internalModelName + '_' + model.id);
-                                if(App.Data.Cache.Patching[token].text.length > 0){
-                                    // ok
+                                // Get previous version of data
+                                // - stored in memory, not backed up anywhere
+                                // - included hash+text
+                                try {
+                                    // console.log(collection.model.internalModelName + '_' + model.id);
+                                    if(App.Data.Cache.Patching[token].text.length > 0){
+                                        // ok
 
+                                    }
+                                } catch(err){
+                                    // No previous cache to compare against!
+                                    // - this should never be sent if we're sending a valid hash
+                                    console.error('HUGE FAILURE CACHING!');
+                                    console.log(err);
+                                    return false;
                                 }
-                            } catch(err){
-                                // No previous cache to compare against!
-                                // - this should never be sent if we're sending a valid hash
-                                console.error('HUGE FAILURE CACHING!');
-                                console.log(err);
-                                return false;
+
+                                // Create patcher
+                                var dmp = new diff_match_patch();
+
+                                // Build patches from text
+                                var patches = dmp.patch_fromText(response.patch);
+
+                                // get our result text!
+                                var result_text = dmp.patch_apply(patches, App.Data.Cache.Patching[token].text);
+
+                                // Convert text to an object
+                                try {
+                                    response.data = JSON.parse(result_text[0]); // 1st, only 1 patch expected
+                                } catch(err){
+                                    // Shoot, it wasn't able to be an object, this is kinda fucked now
+                                    // - need to re-try the request, but instead skip patching (report that it failed though)
+                                    console.error('Failed recreating JSON');
+                                    data.hash = false;
+                                    runFunc(data); // run it again
+                                    // dfd.reject({patch_failed: true});
+                                    return false;
+                                }
+
                             }
 
-                            // Create patcher
-                            var dmp = new diff_match_patch();
+                            // console.log('Calling success');
 
-                            // Build patches from text
-                            var patches = dmp.patch_fromText(response.patch);
+                            // After patching (if any occurred)
 
-                            // get our result text!
-                            var result_text = dmp.patch_apply(patches, App.Data.Cache.Patching[token].text);
+                            // Return data without the 'Model' lead
+                            var tmp = [];
+                            var tmp = _.map(response.data,function(v){
+                                return v[modelName];
+                            });
 
-                            // Convert text to an object
-                            try {
-                                response.data = JSON.parse(result_text[0]); // 1st, only 1 patch expected
-                            } catch(err){
-                                // Shoot, it wasn't able to be an object, this is kinda fucked now
-                                // - need to 
-                                console.error('Failed recreating JSON');
-                                return false;
-                            }
+                            // Update cache for patching
+                            App.Data.Cache.Patching[token] = {
+                                hash: response.hash,
+                                text: JSON.stringify(response.data)
+                            };
 
+                            // Return single value
+                            window.setTimeout(function(){
+
+                                // Resolve
+                                dfd.resolve(tmp);
+
+                                // Fire success function
+                                if(options.success){
+                                    options.success(tmp);
+                                }
+                            },1);
+                        
                         }
-
-                        // console.log('Calling success');
-
-                        // After patching (if any occurred)
-
-                        // Return data without the 'Model' lead
-                        var tmp = [];
-                        var tmp = _.map(response.data,function(v){
-                            return v[modelName];
-                        });
-
-                        // Update cache for patching
-                        App.Data.Cache.Patching[token] = {
-                            hash: response.hash,
-                            text: JSON.stringify(response.data)
-                        };
-
-                        // Return single value
-                        window.setTimeout(function(){
-
-                            // Resolve
-                            dfd.resolve(tmp);
-
-                            // Fire success function
-                            if(options.success){
-                                options.success(tmp);
-                            }
-                        },1);
-                    
-                    }
-                });
+                    });
+                }
+                runFunc(data);
 
                 break;
         }
@@ -721,7 +751,52 @@
             _.each(this._apiEvents, function(ev){
                 Api.Events.off(ev);
             });
-        }
+        },
+
+        delegateEventsCustom: function(){
+            return false;
+        },
+        _redelegate: function(){
+            var that = this;
+
+            // Remove events
+            this.undelegateEvents();
+            this.delegateEvents();
+
+            // Custom delegation
+            this.delegateEventsCustom();
+
+            // Initiate _redelegate on child views
+            this._subViews = this._subViews || [];
+            _.each(this._subViews, function(subView){
+                subView._redelegate();
+            });
+
+            // // Run _redelegateCustom
+            // if(this.hasOwnProperty('_redelegateCustom')){
+            //     this._redelegateCustom();
+            // }
+
+        },
+
+        _closeCustom: function(){
+            return false;
+        },
+
+        _close: function(){
+            // Execute _close on subViews as well
+            this._subViews = this._subViews || [];
+            _.each(this._subViews, function(sv){
+                if(typeof sv._close == 'function'){
+                    sv._close();
+                }
+            });
+
+            // Run _closeCustom
+            // if(this.hasOwnProperty('_closeCustom')){
+            this._closeCustom();
+
+        },
 
     });
 

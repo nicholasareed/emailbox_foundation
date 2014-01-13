@@ -46,7 +46,7 @@ define(function (require) {
 
         login: function () {
             require(["app/views/Login"], function (LoginView) {
-                slider.slidePage(new LoginView({}).$el);
+                slider.slidePage(new LoginView({}));
             });
         },
 
@@ -55,30 +55,63 @@ define(function (require) {
             Backbone.history.navigate('login', {trigger: true});
         },
 
+        _getCachedView: function(){
+            // Returns a cached view for this route
+            var hash = window.location.hash;
+
+            if(App.RouteCache[hash] != undefined){
+                return App.RouteCache[hash];
+            }
+
+            return false;
+
+        },
+
+        _setCachedView: function(view){
+            // Returns a cached view for this route
+            var hash = window.location.hash;
+
+            App.RouteCache[hash] = view;
+
+        },
+
         home: function (type, text) {
+            var that = this;
+
             if(type == undefined){
                 type = 'label';
                 text = 'Inbox';
             }
+
+            // Cached?
+            var cachedView = this._getCachedView();
+            if(cachedView != false){
+                // Already cached, switch to it and _redelegate events
+
+                // Add back to DOM
+                slider.slidePage(cachedView);
+
+                // Redelegate
+                cachedView._redelegate();
+                return;
+            }
+
             require(["app/models/thread", "app/views/Home"], function (models, HomeView) {
                 var homeView = new HomeView({
                     title: text,
                     type: type, 
                     text: text
-                    // collection: new models.ThreadCollection([],{
-                    //     type: type,
-                    //     text: text
-                    // })
                 });
                 // homeView.delegateEvents();
                 // homeView.delegateEventsCustom();
-                slider.slidePage(homeView.$el);
+                that._setCachedView(homeView);
+                slider.slidePage(homeView);
             });
         },
 
         dash: function () {
             require(["app/views/Dash"], function (DashView) {
-                slider.slidePage(new DashView({}).$el);
+                slider.slidePage(new DashView({}));
             });
         },
 
@@ -89,31 +122,31 @@ define(function (require) {
                 });
                 slider.slidePage(new ThreadView({
                     model: threadModel
-                }).$el);
+                }));
             });
         },
 
         search: function () {
             require(["app/views/Search"], function (SearchView) {
-                slider.slidePage(new SearchView({}).$el);
+                slider.slidePage(new SearchView({}));
             });
         },
 
         reply: function (id) {
             require(["app/views/Reply"], function (ReplyView) {
-                slider.slidePage(new ReplyView({}).$el);
+                slider.slidePage(new ReplyView({}));
             });
         },
 
         compose: function () {
             require(["app/views/Compose"], function (ComposeView) {
-                slider.slidePage(new ComposeView({}).$el);
+                slider.slidePage(new ComposeView({}));
             });
         },
 
         settings: function () {
             require(["app/views/Settings"], function (SettingsView) {
-                slider.slidePageFrom(new SettingsView({}).$el, 'page-left');
+                slider.slidePageFrom(new SettingsView({}), 'page-left');
             });
         }
 
@@ -157,7 +190,7 @@ define(function (require) {
 
         // refresh: function (id) {
         //     loadingView.delegateEvents();
-        //     slider.slidePage(loadingView.$el);
+        //     slider.slidePage(loadingView);
         //     window.setTimeout(function(){
         //         Backbone.history.navigate('home/' + id, {trigger: true});
         //     }, 1000);
@@ -168,7 +201,7 @@ define(function (require) {
         //     // Loads the stats for the person
 
         //     require(["app/views/Body"], function (BodyView) {
-        //         slider.slidePage(new BodyView({}).$el);
+        //         slider.slidePage(new BodyView({}));
         //     });
         // },
 
@@ -188,12 +221,12 @@ define(function (require) {
         //         if(id && id != undefined && id != null && id != 'null'){
         //             localStorage.setItem('stored_last_car_id_v1_', id);
         //             var carModel = new models.Car({_id: id});
-        //             slider.slidePage(new HomeView({model: carModel}).$el);
+        //             slider.slidePage(new HomeView({model: carModel}));
         //             // car.fetch({
         //             //     prefill: true,
         //             //     success: function (data) {
-        //             //         slider.slidePage(new HomeView({model: data}).$el);
-        //             //         // slider.slidePage(homeView.$el);
+        //             //         slider.slidePage(new HomeView({model: data}));
+        //             //         // slider.slidePage(homeView);
         //             //     }
         //             // });
 
@@ -218,9 +251,9 @@ define(function (require) {
         //                                 console.info('most_recent id');
         //                                 console.info(default_id);
         //                                 Backbone.history.navigate('home/' + default_id, {trigger: true});
-        //                                 // slider.slidePage(new HomeView({model: data}).$el);
+        //                                 // slider.slidePage(new HomeView({model: data}));
         //                             });
-        //                         // slider.slidePage(homeView.$el);
+        //                         // slider.slidePage(homeView);
         //                     }
         //                 });
         //             }
@@ -228,12 +261,12 @@ define(function (require) {
         //         }
         //     });
         //     // homeView.delegateEvents();
-        //     // slider.slidePage(homeView.$el);
+        //     // slider.slidePage(homeView);
         // },
 
         // login: function () {
         //     require(["app/views/Login"], function (LoginView) {
-        //         slider.slidePage(new LoginView({}).$el);
+        //         slider.slidePage(new LoginView({}));
         //     });
         // },
 
@@ -244,13 +277,13 @@ define(function (require) {
 
         // driverSelect: function (id) {
         //     require(["app/views/DriverSelect"], function (DriverSelectView) {
-        //         slider.slidePage(new DriverSelectView({}).$el);
+        //         slider.slidePage(new DriverSelectView({}));
         //     });
         // },
 
         // driverList: function () {
         //     require(["app/models/driver", "app/views/DriverList"], function (models, DriverListView) {
-        //         slider.slidePage(new DriverListView({}).$el);
+        //         slider.slidePage(new DriverListView({}));
         //     });
         // },
 
@@ -270,14 +303,14 @@ define(function (require) {
         //         App.Data.Cache['last_driver_home'] = id;
 
         //         var driver = new models.Driver({_id: id});
-        //         slider.slidePage(new DriverView({model: driver}).$el);
+        //         slider.slidePage(new DriverView({model: driver}));
         //     });
         // },
 
         // driverEdit: function (id) {
         //     require(["app/models/driver", "app/views/DriverEdit"], function (models, DriverEditView) {
         //         var driver = new models.Driver({_id: id});
-        //         slider.slidePage(new DriverEditView({model: driver}).$el);
+        //         slider.slidePage(new DriverEditView({model: driver}));
         //     });
         // },
 
@@ -286,7 +319,7 @@ define(function (require) {
         //         var collection = new models.TripCollection([], {});
         //         slider.slidePage(new TripListView({
         //             collection: collection
-        //         }).$el);
+        //         }));
         //     });
         // },
 
@@ -295,7 +328,7 @@ define(function (require) {
         //         var collection = new models.TripCollection([], {});
         //         slider.slidePage(new TripListView({
         //             collection: new models.TripCollection([], {car_id: id})
-        //         }).$el);
+        //         }));
         //     });
         // },
 
@@ -304,17 +337,17 @@ define(function (require) {
         //         var collection = new models.TripCollection([], {});
         //         slider.slidePage(new TripListView({
         //             collection: new models.TripCollection([], {driver_id: id})
-        //         }).$el);
+        //         }));
         //     });
         // },
 
         // tripDetails: function (id) {
         //     require(["app/models/trip", "app/views/Trip"], function (models, TripView) {
         //         var trip = new models.Trip({_id: id});
-        //         slider.slidePage(new TripView({model: trip}).$el);
+        //         slider.slidePage(new TripView({model: trip}));
         //         // trip.fetch({
         //         //     success: function (data) {
-        //         //         slider.slidePage(new TripView({model: data}).$el);
+        //         //         slider.slidePage(new TripView({model: data}));
         //         //     }
         //         // });
         //     });
@@ -322,7 +355,7 @@ define(function (require) {
 
         // carList: function () {
         //     require(["app/models/car", "app/views/CarList"], function (models, CarListView) {
-        //         slider.slidePage(new CarListView({}).$el);
+        //         slider.slidePage(new CarListView({}));
         //     });
         // },
 
@@ -333,7 +366,7 @@ define(function (require) {
         //         var car = new models.Car({_id: id});
         //         car.fetch({
         //             success: function (data) {
-        //                 slider.slidePage(new CarView({model: data}).$el);
+        //                 slider.slidePage(new CarView({model: data}));
         //             }
         //         });
         //     });
@@ -342,13 +375,13 @@ define(function (require) {
         // car_edit: function (id) {
         //     require(["app/models/car", "app/views/CarEdit"], function (models, CarEditView) {
         //         var car = new models.Car({_id: id});
-        //         slider.slidePage(new CarEditView({model: car}).$el);
+        //         slider.slidePage(new CarEditView({model: car}));
         //     });
         // },
 
         // errorList: function () {
         //     require(["app/models/error", "app/views/ErrorList"], function (models, ErrorListView) {
-        //         slider.slidePage(new ErrorListView({}).$el);
+        //         slider.slidePage(new ErrorListView({}));
         //     });
         // },
 
@@ -356,7 +389,7 @@ define(function (require) {
         //     require(["app/models/error", "app/views/ErrorList"], function (models, ErrorListView) {
         //         slider.slidePage(new ErrorListView({
         //             car_id: car_id
-        //         }).$el);
+        //         }));
         //     });
         // },
 
@@ -364,19 +397,19 @@ define(function (require) {
         //     require(["app/views/Error"], function (ErrorView) {
         //         slider.slidePage(new ErrorView({
         //             errorCode: error_code
-        //         }).$el);
+        //         }));
         //     });
         // },
 
         // settings: function () {
         //     require(["app/views/Settings"], function (SettingsView) {
-        //         slider.slidePageFrom(new SettingsView({}).$el, 'page-left');
+        //         slider.slidePageFrom(new SettingsView({}), 'page-left');
         //     });
         // },
 
         // settings_cars: function () {
         //     require(["app/models/car", "app/views/SettingsCarList"], function (models, SettingsCarListView) {
-        //         slider.slidePage(new SettingsCarListView({}).$el);
+        //         slider.slidePage(new SettingsCarListView({}));
         //     });
         // }
 

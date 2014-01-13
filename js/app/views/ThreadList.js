@@ -28,8 +28,11 @@ define(function (require) {
                 'sort_list_elem',
                 'appendSubview',
                 'clearSubviews',
-                '_redelegate',
-                '_refreshData');
+                '_refreshData',
+                // '_redelegate',
+                'delegateEventsCustom',
+                // '_close',
+                '_closeCustom');
 
             this.options = options;
 
@@ -118,10 +121,12 @@ define(function (require) {
                 },function(result){
                     that.collection.fetch();
                 })
-            );
+            ); 
 
+            // Initiate .fetch for getting records
             this.collection.fetch({reset: true});
 
+            // Render
             this.render();
 
         },
@@ -140,23 +145,26 @@ define(function (require) {
             });
 
             this._subViews = [];
-        }, 
+        },
 
-        _redelegate: function(){
+        _closeCustom: function(){
+            // Update the _lastScrollerPosition for re-displaying this view later (keeps positioning)
+            this._lastScrollerPosition = this.$('.slide-list-items').scrollTop();
+            // console.log('ThreadList _closeCustom');
+            // console.log(this._lastScrollerPosition);
+            // debugger;
+        },
 
-            // Remove events
-            this.undelegateEvents();
-            this.delegateEvents();
+        delegateEventsCustom: function(){
+            // Unbind and re-bind events
+            // - assuming it has been rendered, removed, and then gets placed back on the DOM
 
-            // Custom delegation (if exists)
-            if(this.delegateEventsCustom != undefined){
-                this.delegateEventsCustom();
-            }
+            // Scroll to correct location
+            // console.log('ThreadList delegateEventsCustom');
+            // console.log(this._lastScrollerPosition);
+            this.$el.scrollTop(this._lastScrollerPosition);
+            this.$('.slide-list-items').scrollTop(this._lastScrollerPosition);
 
-            // Initiate _redelegate on child views
-            _.each(this._subViews, function(subView){
-                subView._redelegate();
-            });
         },
 
         _refreshData: function(){

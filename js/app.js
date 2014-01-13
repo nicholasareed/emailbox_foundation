@@ -99,6 +99,7 @@ require.config({
 
 // global data storage if invoked here?
 var App = {
+	RouteCache: {},
 	Data: {
 		Store: {
 			Contact: null
@@ -165,9 +166,13 @@ require(['jquery', 'backbone-adapter', 'app/router', 'credentials', 'utils', 'ap
 		$(document).ready(function(){
 
             // Enable swiping on the global <body>
+            // - also adds to <body style="..."> -webkit-user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
             Hammer($('body').get(0), {
                 swipe_velocity : 0.5
             });
+
+			// Embedly
+			$.embedly.defaults.key = App.Credentials.embedly_key;
 
 			App.Data.xy.window.height = $(window).height();
 			App.Data.xy.window.width = $(window).width();
@@ -299,7 +304,7 @@ require(['jquery', 'backbone-adapter', 'app/router', 'credentials', 'utils', 'ap
 				event.stopPropagation();
 				event.preventDefault();
 				if($(elem).hasClass('reverse-page')){
-					$("body").attr('reverse-page',"1");
+					$("body").attr('next-transition','reverse-page');
 					router.slider.force_reverse = true;
 				}
 				window.history.back();

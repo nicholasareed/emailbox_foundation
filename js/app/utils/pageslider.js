@@ -40,25 +40,31 @@ define(function (require) {
 
         // Use this function directly if you want to control the sliding direction outside PageSlider
         this.slidePageFrom = function (page, from) {
-
+            var that = this;
             this.lastPage = _.extend({}, currentPage);
 
             if(this.force_reverse){
                 from = 'page-right';
                 this.force_reverse = false;
             }
-            container.append(page);
+            
+            container.append(page.$el);
 
             if (!currentPage || !from) {
-                page.attr("class", "page page-center");
+                page.$el.attr("class", "page page-center");
                 currentPage = page;
                 return;
             }
 
-            // Position the page at the starting position of the animation
-            page.attr("class", "page " + from);
+            if(typeof this.lastPage._close == 'function'){
+                that.lastPage._close(); // closes out events
+            }
 
-            currentPage.one('webkitTransitionEnd', function (e) {
+            // Position the page at the starting position of the animation
+            page.$el.attr("class", "page " + from);
+
+            currentPage.$el.one('webkitTransitionEnd', function (e) {
+                // remove el (should be removing the View!, not just the el?)
                 $(e.target).remove();
             });
 
@@ -66,8 +72,8 @@ define(function (require) {
             container[0].offsetWidth;
 
             // Position the new page and the current page at the ending position of their animation with a transition class indicating the duration of the animation
-            page.attr("class", "page transition page-center");
-            currentPage.attr("class", "page transition " + (from === "page-left" ? "page-right" : "page-left"));
+            page.$el.attr("class", "page transition page-center");
+            currentPage.$el.attr("class", "page transition " + (from === "page-left" ? "page-right" : "page-left"));
             currentPage = page;
         };
 

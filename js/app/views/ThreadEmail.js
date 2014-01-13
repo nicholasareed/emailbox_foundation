@@ -23,7 +23,16 @@ define(function (require) {
 
             this.threadModel = options.threadModel;
 
-            this.model.on('change', this.render, this);
+            this.model.on('change:original.labels', function(){
+                if($.inArray("\\\\Starred", this.model.attributes.original.labels) > -1){
+                    // is starred
+                    this.$('.action-star').addClass('icon-enabled');
+                } else {
+                    this.$('.action-star').removeClass('icon-enabled');
+                }
+                
+            }, this);
+
             this.render();
 
         },
@@ -71,6 +80,29 @@ define(function (require) {
             } else {
                 this.$el.addClass('full');
             }
+
+
+            // Parse links (use linkify[jquery.misc] and embedly)
+            this.$('.linkify .ParsedDataContent').each(function(){
+                $(this).html($(this).html().linkify());
+            });
+            this.$('.linkify .ParsedDataContent a').embedly({
+                query:{
+                    maxwidth: App.Data.xy.win_width - 30
+                },
+                display: function(data){
+                    switch(data.type){
+                        case 'video':
+                        case 'photo':
+                            $(this).after('<div class="embedded_media">' + data.html + '</div>');
+                        default:
+                            break;
+                    }
+                }
+            }).on('click', function(){
+                window.open($(this).attr('href'), '_system', 'location=yes,closebuttoncaption=DDDone');
+                return false;
+            });
 
             // Hammer(this.el).off('doubletap');
             // Hammer(this.el).on('doubletap', this.show_minimized, this);
@@ -120,20 +152,41 @@ define(function (require) {
 
             // See if already starred
             var saveData = {},
+                threadSaveData = {},
                 action = 'star';
-            if($.inArray("\\Starred", this.model.attributes.original.labels) > -1){
-                // Unlabel
+            if($.inArray("\\\\Starred", this.model.attributes.original.labels) > -1){
+                // UnStar
                 // this.model.set('attributes.labels.' + label, 1);
-                saveData['original.labels'].push("\\Starred");
+                saveData['original.labels'] = _.without(this.model.attributes.original.labels, '\\\\Starred');
                 this.model.save(saveData);
+
+                // Update Thread data too
+                threadSaveData['attributes.labels.Starred' ] = 0;
+                this.threadModel.save(threadSaveData);
+
                 action = 'unstar';
             } else {
-                // Apply new label
-                // this.model.set('attributes.labels.' + label, 0);
-                // saveData['attributes.labels.Starred'] = 1;
-                saveData['original.labels'] = _.without(this.model.attributes.original.labels, "\\Starred");
+                // Add Star
+
+                if(typeof(this.model.attributes.original.labels) != typeof([])){
+                    this.model.set('original.labels',[]);
+                }
+
+                // Concat
+                saveData['original.labels'] = [].concat(this.model.attributes.original.labels).concat(['\\\\Starred']);
+                if(typeof(saveData['original.labels']) == typeof(1)){
+                    alert('faled type');
+                    debugger;
+                }
                 this.model.save(saveData);
+
+                // Update Thread data too
+                threadSaveData['attributes.labels.Starred' ] = 1;
+                this.threadModel.save(threadSaveData);
+
             }
+
+            return false;
 
             // Emit Thread.action event
             Api.event({

@@ -27,6 +27,7 @@ define(function (require) {
             this.model.on('related:Email:reset', function(tmpModel){
                 // Create subViews for each email
                 that.render();
+                console.log('RELATED EMAIL RESET');
 
                 // Fetch the emails for this Thread
                 // - reverse the order after we get them (most recent == last)
@@ -54,7 +55,12 @@ define(function (require) {
 
             }, that);
 
-            this.model.on('change:attributes', this.render, this);
+            this.model.on('change:attributes', function(){
+
+                // this.model.fetchRelated();
+                // this.render();
+
+            }, this);
 
             // Listen for newly-added emails
             this._apiEvents.push(
